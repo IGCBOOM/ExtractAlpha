@@ -12,14 +12,19 @@ namespace ExtractAlpha
     class Program
     {
 
-        static void GetAlphaFromDir(string dir)
+        static void GetAlphaFromDir(string dir, bool doModelDir = false)
         {
 
             var files = Directory.GetFiles(dir, "*.png", SearchOption.AllDirectories);
 
             foreach (var file in files)
             {
-                
+
+                if (!doModelDir && (file.Contains("\\models\\") || file.Contains("/models/")))
+                {
+                    continue;
+                }
+
                 Image<Rgba32> img = Image.Load<Rgba32>(file);
 
                 var imgOut = new Image<Rgba32>(img.GetConfiguration(), img.Width, img.Height);
@@ -62,7 +67,27 @@ namespace ExtractAlpha
 
             try
             {
-                GetAlphaFromDir(args.Length == 0 ? AppDomain.CurrentDomain.BaseDirectory : args[0]);
+
+                switch (args.Length)
+                {
+                    case 1:
+                        GetAlphaFromDir(args[0]);
+                        break;
+                    case 2:
+                        if (bool.TryParse(args[1], out var res))
+                        {
+                            GetAlphaFromDir(args[0], res);
+                        }
+                        else
+                        {
+                            throw new ArgumentException("Second argument to command line was invalid! Please use \"True\" or \"False\"");
+                        }
+                        break;
+                    case 0:
+                    default:
+                        GetAlphaFromDir(AppDomain.CurrentDomain.BaseDirectory);
+                        break;
+                }
             }
             catch (Exception e)
             {
